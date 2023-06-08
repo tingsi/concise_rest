@@ -2,12 +2,18 @@
  apt-get install libapache2-mod-php
  apt-get install libapache2-mod-php7.2
  apt-get install libapache2-mod-apcu
-
+ sudo apt-get install -y memcached
+ sudo apt-get install -y php-mbstring
+ 
  apt-get install php-intl
  apt-get install php-pdo php-mysqli
  apt-get install php7.2-mysqli php7.2-pdo
 
+ sudo apt-get install -y memcached
+
+
 a2enmod rewrite
 a2enmod php
 a2enmod php7.2
+
 
