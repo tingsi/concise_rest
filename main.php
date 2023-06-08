@@ -24,7 +24,9 @@ include_once( CROOT . DS . 'core.function.php' );
 include_once( CROOT . DS . 'rest.function.php' );
 include_once( CROOT . DS . 'error.function.php' );
 include_once( CROOT . DS . 'cache.function.php' );
-include_once( CROOT . DS . 'db.class.php' );
+include_once( CROOT . DS . 'db.class.php' );  // 函数式数据库访问
+include_once( CROOT . DS . 'odb.class.php' ); // 支持多数据库切换的访问，以支持SaaS
+include_once( CROOT . DS . 'dbt.class.php');  // 基于强封装的表访问
 include_once( CROOT . DS . 'odb.class.php' );
 include_once( CROOT . DS . 'http.php' );
 
@@ -62,10 +64,10 @@ if (v('debug') == date('mdY')) define('DEBUG', true);
 
 header('P3P:CP="NOI ADM DEV PSAi COM NAV OUR OTR STP IND DEM"');
 header('Access-Control-Allow-Origin:*');
-header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+header("Access-Control-Allow-Methods: GET, POST, OPTIONS, DELETE, PATCH, PUT");
 // Access-Control headers are received during OPTIONS requests
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-	header("Access-Control-Allow-Headers: content-type,x-http-method-override");
+	header("Access-Control-Allow-Headers: content-type,x-http-method-override, token");
 	exit();
 }
 
