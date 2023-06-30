@@ -58,12 +58,13 @@ class IN
         static $fields = null;
         if ($fields == null) {
             $fields = array_merge(getallheaders(), $_REQUEST);
-            // for 'Content-Type: application/json'
-            if (array_key_exists("CONTENT_TYPE", $_SERVER) && strcmp($_SERVER["CONTENT_TYPE"], 'application/json') === 0) {
-                if (strcmp($_SERVER["REQUEST_METHOD"], 'POST') === 0) {
+            // for 'Content-Type: application/json' or "application/json;charset=UTF-8"
+            if (array_key_exists("CONTENT_TYPE", $_SERVER) && strcmp($_SERVER["CONTENT_TYPE"], 'application/json') >= 0) {
+                if (in_array(strtolower($_SERVER["REQUEST_METHOD"]) , ['post', 'put', 'patch'])) {
                     $json = file_get_contents('php://input');
+                    error_log("input content is: $json\n");
                     if ($json) {
-                        $obj = json_decode($json, true);
+                        $obj = json_decode($json, true, 10, JSON_THROW_ON_ERROR);
                         $fields = array_merge($fields, $obj);
                     }
                 }
@@ -76,7 +77,7 @@ class IN
 
 class OUT
 {
-    static $_res = array('code' => '200', 'msg' => '', 'ack' => 'ackok', 'data' => array());
+    static $_res = array('code' => '200', 'msg' => 'OK', 'ack' => 'ackok', 'data' => array());
 
     // 出错输出
     static function onFail($code, $msg, $extra = NULL, $stacks = NULL)
