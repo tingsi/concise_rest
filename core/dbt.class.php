@@ -50,7 +50,7 @@ class StringField extends RawField
 {
     public function where():string
     {
-        return "{$this->fieldname} = \"{$this->fieldval}\"";
+        return "`{$this->fieldname}` = \"{$this->fieldval}\"";
     }
     public function updateval():string
     {
@@ -62,7 +62,7 @@ class IntField extends RawField
 {
     public function where():string
     {
-        return "{$this->fieldname} = {$this->fieldval}";
+        return "`{$this->fieldname}` = {$this->fieldval}";
     }
     public function updateval():string
     {
