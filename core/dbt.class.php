@@ -40,6 +40,10 @@ abstract class RawField
     abstract public function updateval():string;
     public function updatekey(): string
     {
+        return "`$this->fieldname`";
+    }    
+    public function key(): string
+    {
         return $this->fieldname;
     }
     // abstract public function insertval(): string;
@@ -140,10 +144,13 @@ class RawTable implements IChangable
             return DB::getList($sql);
     }
     # @return true|false
-    public function insert()
+    public function insert(RawField ...  $rf)
     {
-        $ks = array_map(fn(RawField &$cf): string => $cf->updatekey(), $this->changedFields);
-        $vs = array_map(fn(RawField &$cf): string => $cf->updateval(), $this->changedFields);
+        $changed = $this->changedFields;
+        if ($rf)
+            $changed = array_merge($changed, $rf);
+        $ks = array_map(fn(RawField &$cf): string => $cf->updatekey(), $changed);
+        $vs = array_map(fn(RawField &$cf): string => $cf->updateval(), $changed);
         $sql = "insert into " . $this->tablename;
         $sql .= "(" . join(',', $ks) . ") values (" . join(',', $vs) . ")";
         $this->reset();
@@ -189,7 +196,7 @@ class RawTable implements IChangable
         foreach ($this as $k => $v) {
             if ($v instanceof RawField)
                 if ($v->value() != null)
-                    $res[$v->updatekey()] = $v->value();
+                    $res[$v->key()] = $v->value();
         }
         return $res;
     }

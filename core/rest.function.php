@@ -62,7 +62,6 @@ class IN
             if (array_key_exists("CONTENT_TYPE", $_SERVER) && strcmp($_SERVER["CONTENT_TYPE"], 'application/json') >= 0) {
                 if (in_array(strtolower($_SERVER["REQUEST_METHOD"]) , ['post', 'put', 'patch'])) {
                     $json = file_get_contents('php://input');
-                    error_log("input content is: $json\n");
                     if ($json) {
                         $obj = json_decode($json, true, 10, JSON_THROW_ON_ERROR);
                         $fields = array_merge($fields, $obj);
