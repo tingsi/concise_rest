@@ -150,15 +150,17 @@ class RawTable implements IChangable
         if ($rf)
             $changed = array_merge($changed, $rf);
         $changed = array_unique($changed);
-        $ks = array_map(fn(RawField &$cf): string => $cf->updatekey(), $changed);
-        $vs = array_map(fn(RawField &$cf): string => $cf->updateval(), $changed);
+        $ks = array_map(fn(RawField $cf): string => $cf->updatekey(), $changed);
+        $ksr = array_map(fn(RawField $cf): string => ':' . $cf->key(), $changed);
+        $vs = array_map(fn(RawField $cf): string => $cf->updateval(), $changed);
         $sql = "insert into " . $this->tablename;
-        $sql .= "(" . join(',', $ks) . ") values (" . join(',', $vs) . ")";
+        $sql .= "(" . join(',', $ks) . ") values (" . join(',', $ksr) . ")";
+        $param = array_combine($ksr, $vs);
         $this->reset();
         if ($this->database)
-            return ODB::withdb($this->database)->runSql($sql);
+            return ODB::withdb($this->database)->runSql($sql, $param);
         else
-            return DB::runSql($sql);
+            return DB::runSql($sql, $param);
     }
     public function getlastid():int
     {
