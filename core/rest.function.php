@@ -68,7 +68,8 @@ class IN
                     }
                 }
             }
-            $fields = array_map(fn($v) => trim($v), $fields);
+            // $fields = array_map(fn($v) => trim($v), $fields);
+            array_walk_recursive($fields, fn(&$v, $k) => $v = trim($v));
             //TODO: 进行输入项统一规范化检查处理。
         }
         return $fields;
