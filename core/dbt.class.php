@@ -149,6 +149,7 @@ class RawTable implements IChangable
         $changed = $this->changedFields;
         if ($rf)
             $changed = array_merge($changed, $rf);
+        $changed = array_unique($changed);
         $ks = array_map(fn(RawField &$cf): string => $cf->updatekey(), $changed);
         $vs = array_map(fn(RawField &$cf): string => $cf->updateval(), $changed);
         $sql = "insert into " . $this->tablename;
