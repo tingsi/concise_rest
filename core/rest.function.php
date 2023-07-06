@@ -59,7 +59,7 @@ class IN
         if ($fields == null) {
             $fields = array_merge(getallheaders(), $_REQUEST);
             // for 'Content-Type: application/json' or "application/json;charset=UTF-8"
-            if (array_key_exists("CONTENT_TYPE", $_SERVER) && strcmp($_SERVER["CONTENT_TYPE"], 'application/json') >= 0) {
+            if (array_key_exists("CONTENT_TYPE", $_SERVER) && stristr($_SERVER["CONTENT_TYPE"], 'application/json')) {
                 if (in_array(strtolower($_SERVER["REQUEST_METHOD"]) , ['post', 'put', 'patch'])) {
                     $json = file_get_contents('php://input');
                     if ($json) {
