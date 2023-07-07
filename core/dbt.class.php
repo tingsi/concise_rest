@@ -152,7 +152,7 @@ class RawTable implements IChangable
         $changed = array_unique($changed);
         $ks = array_map(fn(RawField $cf): string => $cf->updatekey(), $changed);
         $ksr = array_map(fn(RawField $cf): string => ':' . $cf->key(), $changed);
-        $vs = array_map(fn(RawField $cf): string => $cf->updateval(), $changed);
+        $vs = array_map(fn(RawField $cf) => $cf->value(), $changed);
         $sql = "insert into " . $this->tablename;
         $sql .= "(" . join(',', $ks) . ") values (" . join(',', $ksr) . ")";
         $param = array_combine($ksr, $vs);
