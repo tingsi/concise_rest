@@ -88,8 +88,7 @@ class DB {
     {
         defined('DEBUG') && error_log("W SQL:$sql");
         defined('DEBUG') && ($param != NULL) && error_log("W SQL:" . print_r($param, true));
-        $pdo = self::getDB();
-        $stmt = $pdo->prepare($sql);
+        $stmt = $this->pdo->prepare($sql);
         try {
             if (!$stmt->execute($param)) {
                 $err = $stmt->errorInfo();
@@ -98,9 +97,10 @@ class DB {
                 }
             }
             ;
-        }catch(PDOException $e){
+        } catch (PDOException $e) {
             throw new REServerUnavailable($e->getMessage());
         }
+
         $stmt->closeCursor();
         return true;
     }

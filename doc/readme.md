@@ -26,10 +26,10 @@ TRAIL STATE:
 
 Interface Method {
       onInit();
-        onGet();
-          onPost();
-            onDelete();
-              onPut();
+      onGet();
+      onPost();
+      onDelete();
+      onPut();
 }
 
 Object User extend Method.
