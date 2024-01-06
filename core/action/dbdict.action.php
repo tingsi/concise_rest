@@ -7,52 +7,52 @@
 IN::mayHave('dbname');
 IN::mustHave("authorization");
 
-$authstring = defined('authorization') ? constant('authorization'):date("dmY");
+$authstring = defined('authorization') ? constant('authorization') : date("dmY");
 
 if ($authstring != $_authorization)
 	throw new REClientNotAllow("认证失败");
 
-	/**
-		* 自定义注释，可以完美覆盖表中的注释。
-		*
-		这里的account 表，id字段，只是示例，可以替换成你的表名和字段名。
-		* @return string[][]
-		*/
-	function my_comment_list()
-	{
+/**
+	   * 自定义注释，可以完美覆盖表中的注释。
+	   *
+	   这里的account 表，id字段，只是示例，可以替换成你的表名和字段名。
+	   * @return string[][]
+	   */
+function my_comment_list()
+{
 	return [
-			[
-				'table_name' => 'account',
-				'column_name' => 'id',
-				'column_comment' => '自增主键'
-			],
-			[
-				'table_name' => 'account',
-				'column_name' => 'cid',
-				'column_comment' => '栏目id'
-			],
+		[
+			'table_name' => 'account',
+			'column_name' => 'id',
+			'column_comment' => '自增主键'
+		],
+		[
+			'table_name' => 'account',
+			'column_name' => 'cid',
+			'column_comment' => '栏目id'
+		],
 
-		];
-	}
+	];
+}
 
-	function my_comment($arr)
-	{
-		$my_table = my_comment_list();
-		foreach ($arr as $k => &$v) {
-			foreach ($my_table as $my) {
-				if (
-					$v['table_name'] == $my['table_name'] &&
-					$v['column_name'] == $my['column_name']
-				) {
-					$v['column_comment'] = $my['column_comment'];
-				}
+function my_comment($arr)
+{
+	$my_table = my_comment_list();
+	foreach ($arr as $k => &$v) {
+		foreach ($my_table as $my) {
+			if (
+				$v['table_name'] == $my['table_name'] &&
+				$v['column_name'] == $my['column_name']
+			) {
+				$v['column_comment'] = $my['column_comment'];
 			}
 		}
-		return $arr;
 	}
+	return $arr;
+}
 
 
-$dbname = $_dbname ? $_dbname : $GLOBALS['config']['db']['db_name'];
+$dbname = empty($_dbname) ? $GLOBALS['config']['db']['db_name'] : $_dbname;
 
 $db = ODB::withdb($dbname);
 
@@ -107,21 +107,21 @@ $column_arr = $db->getList($sql);
 
 
 
-		$column_arr = my_comment($column_arr);
+$column_arr = my_comment($column_arr);
 
-		// 构造表的索引
-		$table_list_str = '';
-		foreach ($table_arr as $v) {
-			$table_list_str .= '<li><a href="#' . $v['table_name'] . '">' .
-				$v['table_name'] . "（{$v['table_comment']}）" . '</a></li>' . "\n";
-		}
+// 构造表的索引
+$table_list_str = '';
+foreach ($table_arr as $v) {
+	$table_list_str .= '<li><a href="#' . $v['table_name'] . '">' .
+		$v['table_name'] . "（{$v['table_comment']}）" . '</a></li>' . "\n";
+}
 
-		// 构造数据字典的内容
-		$table_str = '';
-		foreach ($table_arr as $v) {
-			$table_name = $v['table_name'];
-			$table_comment = $v['table_comment'];
-			$table_str .= <<<html
+// 构造数据字典的内容
+$table_str = '';
+foreach ($table_arr as $v) {
+	$table_name = $v['table_name'];
+	$table_comment = $v['table_comment'];
+	$table_str .= <<<html
 				<a href="#header">回到首页</a>
 
 
@@ -144,22 +144,22 @@ $column_arr = $db->getList($sql);
 					<td align="center" width='70%'  valign="top" class="fieldcolumn">注释</td>
 					</tr>
 html;
-			foreach ($column_arr as $vv) {
-				if ($vv['table_name'] == $table_name) {
-					$table_str .= <<<html
+	foreach ($column_arr as $vv) {
+		if ($vv['table_name'] == $table_name) {
+			$table_str .= <<<html
 						<tr>
 						<td align="left"  width='15%' >
 						<td align="left"  width='15%' ><p class="normal">{$vv['column_type']}</td>
 						<td align="left"  width='70%' >{$vv['column_comment']}</td>
 						</tr>
 html;
-				}
-			}
-			$table_str .= "</table>\n\n";
 		}
+	}
+	$table_str .= "</table>\n\n";
+}
 
-		// 开始构造整个数据字典的html页面
-		$html = <<<html
+// 开始构造整个数据字典的html页面
+$html = <<<html
 			<html>
 			<head>
 			<title>{$dbname}数据字典</title>

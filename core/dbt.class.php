@@ -29,19 +29,19 @@ abstract class RawField
         $this->fieldval = $val;
         $this->ic->onChange($this);
     }
-    public function fromArray($arr):void
+    public function fromArray($arr): void
     {
         if (array_key_exists($this->fieldname, $arr)) {
             $this->fieldval = $arr[$this->fieldname];
             $this->ic->onChange($this);
         }
     }
-    abstract public function where():string;
-    abstract public function updateval():string;
+    abstract public function where(): string;
+    abstract public function updateval(): string;
     public function updatekey(): string
     {
         return "`$this->fieldname`";
-    }    
+    }
     public function key(): string
     {
         return $this->fieldname;
@@ -52,11 +52,11 @@ abstract class RawField
 
 class StringField extends RawField
 {
-    public function where():string
+    public function where(): string
     {
         return "`{$this->fieldname}` = \"{$this->fieldval}\"";
     }
-    public function updateval():string
+    public function updateval(): string
     {
         return "\"{$this->fieldval}\"";
     }
@@ -64,11 +64,11 @@ class StringField extends RawField
 
 class IntField extends RawField
 {
-    public function where():string
+    public function where(): string
     {
         return "`{$this->fieldname}` = {$this->fieldval}";
     }
-    public function updateval():string
+    public function updateval(): string
     {
         return "{$this->fieldval}";
     }
@@ -85,15 +85,15 @@ class RawTable implements IChangable
     private $changedFields = array();
     public function onChange(RawField &$bf)
     {
-        if (! in_array($bf, $this->changedFields))
-            $this->changedFields []= $bf;
+        if (!in_array($bf, $this->changedFields))
+            $this->changedFields[] = $bf;
     }
     /**
      * Summary of __construct
      * @param string $tablename 表名称
      * @param ?string $database 可选数据库
      */
-    public function __construct($tablename, $database=null)
+    public function __construct($tablename, $database = null)
     {
         $this->tablename = $tablename;
         $this->database = $database;
@@ -103,22 +103,23 @@ class RawTable implements IChangable
         $this->wheresql = "";
         $this->changedFields = [];
     }
-/*
-    @param array  $fs
-    @return class BaseTable
-*/
+    /*
+        @param array  $fs
+        @return class BaseTable
+    */
     public function where(...$fs)
     {
-        $wa = array_map(fn (RawField $f): string => $f->where(), $fs);
+        $wa = array_map(fn(RawField $f): string => $f->where(), $fs);
         $this->wheresql = " where " . join(' and ', $wa);
         return $this;
     }
 
     # @return $this a row data;
-    public function selectOne():RawTable
+    public function selectOne(): RawTable
     {
         $sql = "select * from " . $this->tablename;
-        if ($this->wheresql)  $sql .= $this->wheresql;
+        if ($this->wheresql)
+            $sql .= $this->wheresql;
         $this->reset();
         if ($this->database)
             $data = ODB::withdb($this->database)->getLine($sql);
@@ -136,7 +137,8 @@ class RawTable implements IChangable
     public function select()
     {
         $sql = "select * from " . $this->tablename;
-        if ($this->wheresql)  $sql .= $this->wheresql;
+        if ($this->wheresql)
+            $sql .= $this->wheresql;
         $this->reset();
         if ($this->database)
             return ODB::withdb($this->database)->getList($sql);
@@ -144,7 +146,7 @@ class RawTable implements IChangable
             return DB::getList($sql);
     }
     # @return true|false
-    public function insert(RawField ...  $rf)
+    public function insert(RawField ...$rf)
     {
         $changed = $this->changedFields;
         if ($rf)
@@ -162,7 +164,7 @@ class RawTable implements IChangable
         else
             return DB::runSql($sql, $param);
     }
-    public function getlastid():int
+    public function getlastid(): int
     {
         if ($this->database)
             return ODB::withdb($this->database)->lastID();
@@ -175,7 +177,8 @@ class RawTable implements IChangable
         $ua = array_map(fn(RawField &$cf): string => $cf->where(), $this->changedFields);
         $sql = "update " . $this->tablename;
         $sql .= " set " . join(',', $ua);
-        if ($this->wheresql)  $sql .= $this->wheresql;
+        if ($this->wheresql)
+            $sql .= $this->wheresql;
         $this->reset();
 
         if ($this->database)
@@ -186,7 +189,8 @@ class RawTable implements IChangable
     # @return true|false
     public function delete()
     {
-        if (!$this->wheresql) return false;
+        if (!$this->wheresql)
+            return false;
         $sql = "delete from " . $this->tablename . $this->wheresql;
         $this->reset();
         if ($this->database)
@@ -194,7 +198,8 @@ class RawTable implements IChangable
         else
             return DB::runSql($sql);
     }
-    public function toArray(){
+    public function toArray()
+    {
         $res = array();
         foreach ($this as $k => $v) {
             if ($v instanceof RawField)

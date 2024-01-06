@@ -4,6 +4,7 @@
 # 根据数据库生成访问层基础类。只用于开发阶段。
 
 IN::mayHave('dbname');
+IN::mayHave('prefix');
 IN::mustHave("authorization");
 
 $authstring = defined('authorization') ? constant('authorization') : date("dmY");
@@ -13,6 +14,10 @@ if ($authstring != $_authorization)
 
 
 $dbname = $_dbname ? $_dbname : $GLOBALS['config']['db']['db_name'];
+
+$prefix = "t{$_prefix}";
+$mprefix = "m{$_prefix}";
+$date = new DateTime();
 
 $db = ODB::withdb($dbname);
 
@@ -68,9 +73,17 @@ $columns = $db->getList($sql);
 
 foreach ($tables as $table) {
 	$table_name = $table['table_name'];
+	//如果table_name 以下划线开头，表明是系统表，此处忽略掉
+	if (0 == strpos($table_name, '_'))  continue;
+
 	$table_comment = $table['table_comment'];
-	$mfilename = p(AROOT, 'lib', 'class', strtolower("{$table_name}m.class.php"));
-	$classname = ucfirst(strtolower($table_name));
+	// 原始字段定义类
+	$mfilename = p(AROOT, 'lib', 'class', strtolower("{$prefix}{$table_name}.class.php"));
+	$classname = ucfirst($prefix) . ucfirst(strtolower($table_name));
+
+	// 用户修订模型类
+	$m2filename = p(AROOT, 'lib', 'class', strtolower("{$mprefix}{$table_name}.class.php"));
+	$m2classname = ucfirst($mprefix) . ucfirst(strtolower($table_name));
 
 
 	$pk = '';
@@ -80,32 +93,39 @@ foreach ($tables as $table) {
 # vim:syntax=php ts=4 sts=4 sr ai noet fileencoding=utf-8 nobomb
 
 /**
- * 数据库: $dbname
- *   表名： $table_name
- *   说明： $table_comment
+ * 此类由whlrest自动生成，请勿编辑。如需新增函数功能，请在 {$mfilename} 中修改。
+ * 数据库表原始表字段类。
+ * 数据库表: {$dbname} . {$table_name}
+ * 注释说明: {$table_comment}
+ * 生成日期： {$date}
+ * @author whlrest
  */
-class {$classname}M extends RawTable {
+class {$classname} extends RawTable {
+
 EOT;
 
 	foreach ($columns as $column) {
 		if ($column['table_name'] != $table_name)
 			continue;
 		$column_name = $column['column_name'];
-		$column_type = substr_compare($column['column_type'], 'int', 0, 3) ? 'IntField' : 'StringField';
+		$column_type = (0 == substr_compare($column['column_type'], 'int', 0, 3)) ? 'IntField' : 'StringField';
 
+		$ck = empty($column['column_key']) ? '' : ", Key： {$column['column_key']}";
 		$fielddef = <<<EOT
 	/**
 	 * @var $column_type
-	 * 字段名： $column_name
-	 *   类型： {$column['column_type']},  Key： {$column['column_key']}
-	 *   说明： $column_comment
+	 * 字段： $column_name
+	 * 类型： {$column['column_type']}{$ck}
+	 * 注释： {$column['column_comment']}
 	 */
-	public $column_type \$$column_name;
+	public $column_type \${$column_name};
+
 EOT;
 		$fieldinit .= <<<EOT
 		\$this->{$column_name} = new {$column_type}(\$this, "{$column_name}");
+
 EOT;
-		if ($column['column_key'] == 'PRI')
+		if (empty($pk) && ($column['column_key'] == 'PRI'))
 			$pk = $column_name;
 
 		$line .= $fielddef;
@@ -116,12 +136,12 @@ EOT;
 	$cons = <<<EOT
 	/**
 	 * 构造器
-	 * @param mixed \$$pk
 	 * @param mixed \$database
 	 */
-	public function __construct(\$$pk, \$database = null)
+	public function __construct(\$database = "$dbname")
 	{
 		parent::__construct(self::TABLENAME, \$database);
+
 EOT;
 	$line .= $cons;
 	$line .= $fieldinit;
@@ -134,20 +154,22 @@ EOT;
 	 * 列出所有项
 	 * @return array
 	 */
-	public function list{$classname}s():array
+	public function list{$table_name}s():array
 	{
 		return \$this->where(\$this->{$pk})->select();
 	}
 	/**
 	 * 根据ID获取一个项
-	 * @param mixed $k
+	 * @param mixed \$id
 	 * @return ConfM
 	 */
-	public function get{$classname}(\$id): ConfM
+	public function get{$table_name}(\$id): ConfM
 	{
 		\$this->key->set(\$id);
 		return \$this->where(\$this->{$pk}, \$this->key)->selectOne();
 	}
+}
+
 EOT;
 
 		## 写入文件
@@ -157,4 +179,37 @@ EOT;
 
 	}
 
+	// 更新模型类
+	// $m2filename = p(AROOT, 'lib', 'class', strtolower("{$mprefix}{$table_name}.class.php"));
+	// $m2classname = ucfirst($mprefix) . ucfirst(strtolower($table_name)); 
+$mclass = <<<EOT
+<?php
+# vim:syntax=php ts=4 sts=4 sr ai noet fileencoding=utf-8 nobomb
+
+/**
+ * 此类由whlrest自动生成，用于扩展 {$mfilename}的功能。
+ * 数据库表原的模型类。
+ * 数据库表： {$dbname} . {$table_name}
+ * 注释说明： {$table_comment}
+ * 生成日期： {$date}
+ * @author whlrest
+ */
+class {$m2classname} extends {$classname} {
+	/**
+	 * 构造器
+	 */
+	public function __construct()
+	{
+		parent::__construct();
+	}
 }
+
+EOT;
+	if (!file_exists($m2filename))
+	{
+		$f = fopen($m2filename, 'w');
+		fwrite($f, $mclass);
+		fclose($f);
+	}
+}
+OUT::done($tables);
