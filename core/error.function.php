@@ -47,9 +47,21 @@ class REClientTimeout extends _ClientFail {
 class REClientConflict extends _ClientFail {
 	function __construct($msg) {parent::__construct($msg, 409); }
 }
+/*客户端前置条件失败*/
+class REClientPreconditionFail extends _ClientFail {
+	function __construct($msg) {parent::__construct($msg, 412); }
+}
+/*客户端需要前置条件*/
+class REClientPreconditionNeed extends _ClientFail {
+	function __construct($msg) {parent::__construct($msg, 428); }
+}
 /*客户端未符合要求，需要的字段没提供等*/
 class REClientExpectFail extends _ClientFail {
 	function __construct($msg) {parent::__construct($msg, 417); }
+}
+/*客户端依赖失败*/
+class REClientDependencyFail extends _ClientFail {
+	function __construct($msg) {parent::__construct($msg, 424); }
 }
 /*客户端需要升级*/
 class REClientNeedUpgrade extends _ClientFail {

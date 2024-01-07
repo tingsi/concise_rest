@@ -17,7 +17,7 @@ $dbname = $_dbname ? $_dbname : $GLOBALS['config']['db']['db_name'];
 
 $prefix = "t{$_prefix}";
 $mprefix = "m{$_prefix}";
-$date = new DateTime();
+$date = (new DateTime())->format('Y-m-d H:i:s');
 
 $db = ODB::withdb($dbname);
 
@@ -74,7 +74,7 @@ $columns = $db->getList($sql);
 foreach ($tables as $table) {
 	$table_name = $table['table_name'];
 	//如果table_name 以下划线开头，表明是系统表，此处忽略掉
-	if (0 == strpos($table_name, '_'))  continue;
+	if (0 === strpos($table_name, '_'))  continue;
 
 	$table_comment = $table['table_comment'];
 	// 原始字段定义类
