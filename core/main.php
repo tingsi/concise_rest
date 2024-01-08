@@ -69,13 +69,26 @@ if (v('debug') == date('mdY'))
   define('DEBUG', true);
 
 
+// 隐私P3p声明：  
+// NOI(No Interest):不收集或处理用户的兴趣信息。
+// ADM(Administrator):允许网站管理员访问用户数据。
+// DEV(Development):允许开发人员访问用户数据以进行开发和测试。
+// PSAi(Policy Statement Applicable to Individual Users):允许网站根据用户的需求提供个性化的服务。
+// COM(Commercial):允许网站收集广告收入。
+// NAV(Navigation):允许网站使用cookies来提供导航功能。
+// OUR(Our Practices):允许网站收集和使用用户数据以改进服务。
+// OTR(Other Transactions):允许网站在其他交易中收集和使用用户数据。
+// STP(Storage and Transfer of Profiles):允许网站存储和传输用户数据。
+// IND(Information Disclosure):允许网站向第三方披露用户数据。
+// DEM(Display of Ads):允许网站显示广告。
 header('P3P:CP="NOI ADM DEV PSAi COM NAV OUR OTR STP IND DEM"');
 header('Access-Control-Allow-Origin:*');
 header("Access-Control-Allow-Methods: GET, POST, OPTIONS, DELETE, PATCH, PUT");
+
 // Access-Control headers are received during OPTIONS requests
 if ($_SERVER['REQUEST_METHOD'] == 'OPTIONS') {
-  header("Access-Control-Allow-Headers: content-type,x-http-method-override, token");
-  exit();
+  header("Access-Control-Allow-Headers: content-type,x-http-method-override, token, deviceid");
+  exit("iamok with u.");
 }
 
 // 退出处理

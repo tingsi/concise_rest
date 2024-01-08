@@ -23,7 +23,7 @@ class REClientFail extends _ClientFail {
 class REClientNotLogin extends _ClientFail {
 	function __construct($msg) {parent::__construct($msg, 401); }
 }
-/*客户端未授权*/
+/*客户端未授权:注，可能已经登录，但权限不够。*/
 class REClientNotAllow extends _ClientFail {
 	function __construct($msg) {parent::__construct($msg, 403); }
 }
@@ -88,7 +88,7 @@ class REServerUnavailable extends Exception {
 
 function onUnhandledError($errno, $errstr, $errfile, $errline) {
     $errstr = addslashes($errstr);
-    $error = "[$errno] $errstr ".$errfile." 第 $errline 行.";
+    $error = "[$errno] $errstr " . $errfile . ", line: $errline";
 
     if (!(error_reporting() & $errno)) {
         defined('DEBUG') && OUT::warning($error);

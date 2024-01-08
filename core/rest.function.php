@@ -17,6 +17,8 @@ class IN
     // 输入校验, eg:
     // 需要 3到6位字符串： mustHave('name', '/\w{3,6}/');
     // 需要 3到6位数字  ： mustHave('id', '/\d{3,6}/');
+
+    // 返回值内容以兼容语法检查工具
     static function mustHave($field, $match = '', $comment = '')
     {
         $headers = self::prepare();
@@ -32,8 +34,10 @@ class IN
             throw new REClientExpectFail("field format error: $field");
 
         $GLOBALS["_{$field}"] = $val; // fix undefined variables;
+        return $val;
     }
 
+    // 返回值内容以兼容语法检查工具
     static function mayHave($field, $match = '', $comment = '')
     {
         $headers = self::prepare();
@@ -44,6 +48,7 @@ class IN
         $GLOBALS["_{$field}"] = $val; // fix undefined variables;
         if ($val && $match && (!preg_match($match, $val)))
             throw new REClientExpectFail("field format error: $field");
+        return $val;
     }
     static function get($key)
     {
@@ -107,7 +112,7 @@ class OUT
     {
         defined('DEBUG') && self::$_res['debug'] = array('get' => $_GET, 'post' => $_POST, 'files' => $_FILES);
         array_walk_recursive(self::$_res, function (&$val, $key) {
-            $val = urlencode($val);
+            if ($val) $val = urlencode($val);
         });
         $res = json_encode(self::$_res);
         $res = urldecode($res);
