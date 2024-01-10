@@ -77,11 +77,15 @@ class IntField extends RawField
 /**
  * Summary of RawTable
  */
-class RawTable implements IChangable
+abstract class RawTable implements IChangable
 {
     private ?string $database;
     protected $tablename;
     private $wheresql = "";
+
+    // 需要被子类实现的虚函数
+    abstract protected function getPrimaryKey(): ?RawField;
+
     private $changedFields = array();
     public function onChange(RawField &$bf)
     {
@@ -155,7 +159,7 @@ class RawTable implements IChangable
         $ks = array_map(fn(RawField $cf): string => $cf->updatekey(), $changed);
         $ksr = array_map(fn(RawField $cf): string => ':' . $cf->key(), $changed);
         $vs = array_map(fn(RawField $cf) => $cf->value(), $changed);
-        $sql = "insert into " . $this->tablename;
+        $sql = "insert ignore into " . $this->tablename;
         $sql .= "(" . join(',', $ks) . ") values (" . join(',', $ksr) . ")";
         $param = array_combine($ksr, $vs);
         $this->reset();
@@ -174,6 +178,8 @@ class RawTable implements IChangable
     # @return true|false
     public function update()
     {
+        if (!$this->wheresql)
+            return false;
         $ua = array_map(fn(RawField &$cf): string => $cf->where(), $this->changedFields);
         $sql = "update " . $this->tablename;
         $sql .= " set " . join(',', $ua);
@@ -201,10 +207,9 @@ class RawTable implements IChangable
     public function toArray()
     {
         $res = array();
-        foreach ($this as $k => $v) {
-            if ($v instanceof RawField)
-                if ($v->value() != null)
-                    $res[$v->key()] = $v->value();
+        foreach ($this as $v) {
+            if ($v instanceof RawField && !is_null($v->value()))
+                $res[$v->key()] = $v->value();
         }
         return $res;
     }

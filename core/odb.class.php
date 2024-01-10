@@ -24,7 +24,7 @@ class ODB
         $port = $db_config['db_port'];
         $user = $db_config['db_user'];
         $password = $db_config['db_password'];
-        $db_name = $database || $db_config['db_name'];
+        $db_name = empty($database) ? $db_config['db_name'] : $database;
         if (in_array($db_name, ODB::$dbs))
             return ODB::$dbs[$db_name];
 
@@ -37,7 +37,7 @@ class ODB
         return $odb;
     }
 
-    public function getList($sql)
+    public function getList($sql):array
     {
         defined('DEBUG') && error_log("R SQL:$sql");
         $data = array();

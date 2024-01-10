@@ -55,7 +55,7 @@ class DB
         return $pdo;
     }
 
-    static function getList($sql)
+    static function getList($sql):array
     {
         defined('DEBUG') && error_log("R SQL:$sql");
         $data = array();

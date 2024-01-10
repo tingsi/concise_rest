@@ -93,12 +93,12 @@ foreach ($tables as $table) {
 # vim:syntax=php ts=4 sts=4 sr ai noet fileencoding=utf-8 nobomb
 
 /**
- * 此类由whlrest自动生成，请勿编辑。如需新增函数功能，请在 {$mfilename} 中修改。
+ * 此类由whlrest自动生成，请勿编辑。如需新增函数功能，请在 lib/class/{$prefix}{$table_name}.class.php 中修改。
  * 数据库表原始表字段类。
  * 数据库表: {$dbname} . {$table_name}
  * 注释说明: {$table_comment}
  * 生成日期： {$date}
- * @author whlrest
+ * @author z.reddish.j@gmail.com
  */
 class {$classname} extends RawTable {
 
@@ -131,7 +131,7 @@ EOT;
 		$line .= $fielddef;
 	}
 
-	$line .= "	const TABLENAME = \"{$table_name}\";\n";
+	$line .= "	const TABLENAME = \"{$table_name}\";\n\n";
 
 	$cons = <<<EOT
 	/**
@@ -145,10 +145,9 @@ EOT;
 EOT;
 	$line .= $cons;
 	$line .= $fieldinit;
-	$line .= "\n}\n";
+	$line .= "	}\n";
 
 	if ($pk) {
-
 		$line .= <<<EOT
 	/**
 	 * 列出所有项
@@ -156,28 +155,40 @@ EOT;
 	 */
 	public function list{$table_name}s():array
 	{
-		return \$this->where(\$this->{$pk})->select();
+		return \$this->select();
 	}
 	/**
 	 * 根据ID获取一个项
-	 * @param mixed \$id
-	 * @return ConfM
+	 * @param mixed \${$pk}
+	 * @return {$classname}
 	 */
-	public function get{$table_name}(\$id): ConfM
+	public function get{$table_name}(\$id): {$classname}
 	{
-		\$this->key->set(\$id);
-		return \$this->where(\$this->{$pk}, \$this->key)->selectOne();
+		\$this->{$pk}->value(\$id);
+		return \$this->selectOne();
 	}
-}
+
+EOT;
+	}
+
+	//此处假定必须存在主键。这在当前的环境中是很安全的假定。
+	$line .= <<<EOT
+	/**
+	 * 返回主键,多个的话，只算第一个。
+	*/
+	protected function getPrimaryKey(): ?RawField
+	{
+		return \$this->{$pk};
+	}
 
 EOT;
 
-		## 写入文件
-		$f = fopen($mfilename, 'w');
-		fwrite($f, $line);
-		fclose($f);
+	$line .= "}";
 
-	}
+	## 写入文件
+	$f = fopen($mfilename, 'w');
+	fwrite($f, $line);
+	fclose($f);
 
 	// 更新模型类
 	// $m2filename = p(AROOT, 'lib', 'class', strtolower("{$mprefix}{$table_name}.class.php"));
@@ -187,12 +198,12 @@ $mclass = <<<EOT
 # vim:syntax=php ts=4 sts=4 sr ai noet fileencoding=utf-8 nobomb
 
 /**
- * 此类由whlrest自动生成，用于扩展 {$mfilename}的功能。
+ * 此类由whlrest自动生成，用于扩展 lib/class/{$prefix}{$table_name}.class.php 的功能。
  * 数据库表原的模型类。
  * 数据库表： {$dbname} . {$table_name}
  * 注释说明： {$table_comment}
  * 生成日期： {$date}
- * @author whlrest
+ * @author z.reddish.j@gmail.com
  */
 class {$m2classname} extends {$classname} {
 	/**
