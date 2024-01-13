@@ -9,7 +9,7 @@ interface IChangable
 
 abstract class RawField
 {
-    protected $fieldval;
+    protected ?string $fieldval;
     protected string $fieldname;
     private IChangable $ic;
     public function __construct(IChangable $ic, string $fieldname)
@@ -22,6 +22,7 @@ abstract class RawField
     {
         return "{$this->fieldname}={$this->fieldval}";
     }
+#@deprecated: 含义不明确不好理解，还是拆成 get,set算了。
     public function value($val = null)
     {
         if (is_null($val))
@@ -29,6 +30,14 @@ abstract class RawField
         $this->fieldval = $val;
         $this->ic->onChange($this);
     }
+    public function set($val){
+        $this->fieldval = $val;
+        $this->ic->onChange($this);
+    }
+    public function val():?string {
+        return $this->fieldval;
+    }
+
     public function fromArray($arr): void
     {
         if (array_key_exists($this->fieldname, $arr)) {
@@ -107,6 +116,13 @@ abstract class RawTable implements IChangable
         $this->wheresql = "";
         $this->changedFields = [];
     }
+    public function clear()
+    {
+        foreach ($this as $v) {
+            if ($v instanceof RawField && !is_null($v->value()))
+                $v->set("");
+        }
+    }
     /*
         @param array  $fs
         @return class BaseTable
@@ -118,8 +134,8 @@ abstract class RawTable implements IChangable
         return $this;
     }
 
-    # @return $this a row data;
-    public function selectOne(): RawTable
+    # @return a clone of $this for a row data;
+    public function selectOne(): array
     {
         $sql = "select * from " . $this->tablename;
         if ($this->wheresql)
@@ -129,16 +145,13 @@ abstract class RawTable implements IChangable
             $data = ODB::withdb($this->database)->getLine($sql);
         else
             $data = DB::getLine($sql);
-        foreach ($this as &$k) {
-            if ($k instanceof RawField) {
-                $k->fromArray($data);
-            }
-        }
-        return $this;
+
+        return $data;
     }
 
     # @return array() of list rows;
-    public function select()
+    # 暂时需要自己解析.此处避免对大量行数做解析以减小不必要的开支。
+    public function select() :array
     {
         $sql = "select * from " . $this->tablename;
         if ($this->wheresql)
@@ -149,13 +162,17 @@ abstract class RawTable implements IChangable
         else
             return DB::getList($sql);
     }
-    # @return true|false
-    public function insert(RawField ...$rf)
+    # @return true
+    # 注，此处总是返回true。如果出错了，直接通过异常抛出。
+    public function insert()
     {
-        $changed = $this->changedFields;
-        if ($rf)
-            $changed = array_merge($changed, $rf);
-        $changed = array_unique($changed);
+        // 插入时，忽略变更检查，总是插入全部字段。
+        $changed = array();
+        foreach ($this as $v) {
+            if ($v instanceof RawField && !is_null($v->value()))
+                $changed []= $v;
+        }
+        
         $ks = array_map(fn(RawField $cf): string => $cf->updatekey(), $changed);
         $ksr = array_map(fn(RawField $cf): string => ':' . $cf->key(), $changed);
         $vs = array_map(fn(RawField $cf) => $cf->value(), $changed);
@@ -180,7 +197,7 @@ abstract class RawTable implements IChangable
     {
         if (!$this->wheresql)
             return false;
-        $ua = array_map(fn(RawField &$cf): string => $cf->where(), $this->changedFields);
+        $ua = array_map(fn(RawField $cf): string => $cf->where(), $this->changedFields);
         $sql = "update " . $this->tablename;
         $sql .= " set " . join(',', $ua);
         if ($this->wheresql)
@@ -212,5 +229,16 @@ abstract class RawTable implements IChangable
                 $res[$v->key()] = $v->value();
         }
         return $res;
+    }
+    # 注，无论成功与否，都会清空原值。
+    public function fromArray($data)
+    {
+        $this->clear();
+        foreach ($this as $v) {
+            if ($v instanceof RawField) {
+                $v->fromArray($data);
+                $this->onChange($v);
+            }
+        }
     }
 }

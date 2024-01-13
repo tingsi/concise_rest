@@ -50,10 +50,10 @@ class ODB
         return $data;
     }
 
-    public function getLine( $sql )
+    public function getLine( $sql ):array
     {
         $data = $this->getList( $sql );
-        return $data ? @reset($data) : false;
+        return $data ? @reset($data) : [];
     }
 
     public function getValue( $sql )

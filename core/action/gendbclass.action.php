@@ -96,8 +96,7 @@ foreach ($tables as $table) {
  * 此类由whlrest自动生成，请勿编辑。如需新增函数功能，请在 lib/class/{$prefix}{$table_name}.class.php 中修改。
  * 数据库表原始表字段类。
  * 数据库表: {$dbname} . {$table_name}
- * 注释说明: {$table_comment}
- * 生成日期： {$date}
+ * 注释说明: {$table_comment}.
  * @author z.reddish.j@gmail.com
  */
 class {$classname} extends RawTable {
@@ -108,6 +107,7 @@ EOT;
 		if ($column['table_name'] != $table_name)
 			continue;
 		$column_name = $column['column_name'];
+		if (in_array($column_name, ['start_trxid', 'end_trxid'])) continue;
 		$column_type = (0 == substr_compare($column['column_type'], 'int', 0, 3)) ? 'IntField' : 'StringField';
 
 		$ck = empty($column['column_key']) ? '' : ", Key： {$column['column_key']}";
@@ -116,7 +116,7 @@ EOT;
 	 * @var $column_type
 	 * 字段： $column_name
 	 * 类型： {$column['column_type']}{$ck}
-	 * 注释： {$column['column_comment']}
+	 * 注释： {$column['column_comment']}.
 	 */
 	public $column_type \${$column_name};
 
@@ -131,8 +131,6 @@ EOT;
 		$line .= $fielddef;
 	}
 
-	$line .= "	const TABLENAME = \"{$table_name}\";\n\n";
-
 	$cons = <<<EOT
 	/**
 	 * 构造器
@@ -140,7 +138,7 @@ EOT;
 	 */
 	public function __construct(\$database = "$dbname")
 	{
-		parent::__construct(self::TABLENAME, \$database);
+		parent::__construct("{$table_name}", \$database);
 
 EOT;
 	$line .= $cons;
@@ -152,6 +150,7 @@ EOT;
 	/**
 	 * 列出所有项
 	 * @return array
+	 * @deprecated. 用处不大。后续废止.
 	 */
 	public function list{$table_name}s():array
 	{
@@ -164,8 +163,11 @@ EOT;
 	 */
 	public function get{$table_name}(\$id): {$classname}
 	{
-		\$this->{$pk}->value(\$id);
-		return \$this->selectOne();
+		\$this->{$pk}->set(\$id);
+		\$data = \$this->where(\$this->$pk)->selectOne();
+		\$oo = new {$classname}();
+		\$oo->fromArray(\$data);
+		return \$oo;
 	}
 
 EOT;
@@ -176,7 +178,7 @@ EOT;
 	/**
 	 * 返回主键,多个的话，只算第一个。
 	*/
-	protected function getPrimaryKey(): ?RawField
+	protected function getPrimaryKey(): RawField
 	{
 		return \$this->{$pk};
 	}

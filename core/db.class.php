@@ -69,10 +69,10 @@ class DB
         return $data;
     }
 
-    static function getLine($sql) :?array
+    static function getLine($sql) :array
     {
         $data = self::getList($sql);
-        return $data ? @reset($data) : null;
+        return $data ? @reset($data) : [];
     }
 
     static function getValue($sql)
