@@ -1,6 +1,7 @@
 <?php
 # vim:syntax=php ts=4 sts=4 sr ai noet fileencoding=utf-8 nobomb
 
+const  DEFAULT_LIMIT = 1000;
 
 interface IChangable
 {
@@ -91,6 +92,7 @@ abstract class RawTable implements IChangable
     private ?string $database;
     protected $tablename;
     private $wheresql = "";
+    private $limit = DEFAULT_LIMIT;
 
     // 需要被子类实现的虚函数
     abstract protected function getPrimaryKey(): ?RawField;
@@ -114,6 +116,7 @@ abstract class RawTable implements IChangable
     public function reset()
     {
         $this->wheresql = "";
+        $this->limit = DEFAULT_LIMIT;
         $this->changedFields = [];
     }
     public function clear()
@@ -140,6 +143,8 @@ abstract class RawTable implements IChangable
         $sql = "select * from " . $this->tablename;
         if ($this->wheresql)
             $sql .= $this->wheresql;
+        if ($this->limit)
+            $sql .= " limit {$this->limit}";
         $this->reset();
         if ($this->database)
             $data = ODB::withdb($this->database)->getLine($sql);
@@ -156,11 +161,18 @@ abstract class RawTable implements IChangable
         $sql = "select * from " . $this->tablename;
         if ($this->wheresql)
             $sql .= $this->wheresql;
+        if ($this->limit)
+            $sql .= " limit {$this->limit}";
         $this->reset();
         if ($this->database)
             return ODB::withdb($this->database)->getList($sql);
         else
             return DB::getList($sql);
+    }
+    public function limit($limit)
+    {
+        $this->limit = intval($limit);
+        return $this;
     }
     # @return true
     # 注，此处总是返回true。如果出错了，直接通过异常抛出。
